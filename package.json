@@ -4,10 +4,10 @@
   "description": "This repository holds the code for the Rocket League tournament system created solely for the First Updates Now community.",
   "main": "./dist/index.js",
   "scripts": {
-    "dev": "nodemon ./index.ts",
-    "start": "node ./index.js",
+    "dev": "nodemon ./bot/index.ts",
+    "start": "node ./dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc index.ts"
+    "build": "npx tsc"
   },
   "repository": {
     "type": "git",

@@ -5,11 +5,11 @@ config();
 const client = new Client({});
 
 client.on("ready", async () => {
-  console.log("QueuePop is logged in.");
+  console.log("FUN Test is logged in.");
 });
 
 client.on("message", async (msg: Message) => {
-  if (!msg.content.startsWith("-") || msg.author.bot || !msg.guild) return;
+  if (!msg.content.startsWith("_") || msg.author.bot || !msg.guild) return;
 
   msg.channel.startTyping();
 
