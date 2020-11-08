@@ -2,3 +2,4 @@ __pycache__/
 .env
 .vercel
 log.txt
+node_modules/

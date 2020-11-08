@@ -1,0 +1,30 @@
+{
+  "name": "fun.rocketleague.tournamentsystem",
+  "version": "1.0.0",
+  "description": "This repository holds the code for the Rocket League tournament system created solely for the First Updates Now community.",
+  "main": "./dist/index.js",
+  "scripts": {
+    "start": "nodemon ./index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattwells19/FUN.RocketLeague.TournamentSystem.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mattwells19/FUN.RocketLeague.TournamentSystem/issues"
+  },
+  "homepage": "https://github.com/mattwells19/FUN.RocketLeague.TournamentSystem#readme",
+  "dependencies": {
+    "discord.js": "^12.4.1",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/node": "^14.14.6",
+    "typescript": "^4.0.5"
+  }
+}
