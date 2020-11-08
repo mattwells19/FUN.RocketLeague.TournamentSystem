@@ -2,14 +2,17 @@ import { Client, Message } from "discord.js";
 import { config } from "dotenv";
 
 config();
-const client = new Client({});
+const client = new Client();
+
+const prefix = process.env.NODE_ENV === "dev" ? "_" : "-";
 
 client.on("ready", async () => {
-  console.log("FUN Test is logged in.");
+  if (process.env.NODE_ENV === "dev") console.log("FUN Test is logged in.");
+  else console.log("FUN Tournaments is logged in.");
 });
 
 client.on("message", async (msg: Message) => {
-  if (!msg.content.startsWith("_") || msg.author.bot || !msg.guild) return;
+  if (!msg.content.startsWith(prefix) || msg.author.bot || !msg.guild) return;
 
   msg.channel.startTyping();
 
