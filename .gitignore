@@ -3,3 +3,4 @@ __pycache__/
 .vercel
 log.txt
 node_modules/
+coverage/
