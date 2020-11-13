@@ -1,8 +1,13 @@
-import { newTeam } from "./team";
+import { newTeam } from "../src/team";
 import mockingoose from "mockingoose";
-import Teams, { ITeam } from "./Schemas/Teams";
+import Teams from "../Schemas/Teams";
 import * as faker from "faker";
 import { MessageEmbed } from "discord.js";
+import { TeamBuilder } from "./Builders";
+import * as TeamAsync from "../Schemas/TeamsAsync";
+import { mocked } from "ts-jest/utils";
+
+jest.mock("../Schemas/TeamsAsync");
 
 beforeEach(() => {
   mockingoose.resetAll();
@@ -22,26 +27,16 @@ describe("team tests", () => {
   });
 
   it("catches a player who is already registered", async () => {
-    const mockDoc: ITeam = {
-      teamName: faker.random.word(),
-      players: [faker.random.uuid(), faker.random.uuid(), faker.random.uuid()],
-      seed: faker.random.number(),
-      wins: faker.random.number(),
-      losses: faker.random.number(),
-    };
+    const mockDoc = TeamBuilder.single();
     // Returning anything results in the "Player already registered error"
-    mockingoose(Teams).toReturn(mockDoc, "findOne");
-    const response: MessageEmbed = await newTeam(faker.lorem.word(), [
-      faker.random.uuid(),
-      faker.random.uuid(),
-      faker.random.uuid(),
-    ]);
+    mocked(TeamAsync.getTeam).mockResolvedValueOnce(mockDoc);
+    const response: MessageEmbed = await newTeam(faker.lorem.word(), mockDoc.players);
     expect(response).toHaveProperty("title", "Player Already Registered");
   });
 
   it("catches a team without a name", async () => {
     mockingoose(Teams).toReturn(null, "findOne");
-    const response: MessageEmbed = await newTeam("", [faker.random.uuid(), faker.random.uuid(), faker.random.uuid()]);
+    const response: MessageEmbed = await newTeam("", TeamBuilder.single().players);
     expect(response).toHaveProperty("title", "Error Registering Team");
     expect(response).toHaveProperty("description", "Team name required for registration.");
   });
@@ -55,14 +50,14 @@ describe("team tests", () => {
     expect(response).toHaveProperty("description", `Team must consist of 3 players, got ${numOfPlayers}`);
   });
 
-  it("catches error on mongoose call", async () => {
-    mockingoose(Teams).toReturn(new Error("Test Error"), "findOne");
-    const response: MessageEmbed = await newTeam(faker.lorem.word(), [
-      faker.random.uuid(),
-      faker.random.uuid(),
-      faker.random.uuid(),
-    ]);
-    expect(response).toHaveProperty("title", "Error Registering Team");
-    expect(response).toHaveProperty("description", "The server responded with Test Error.");
+  it("catches team with same name", async () => {
+    const mockTeamName = faker.lorem.word();
+    const mockTeams = TeamBuilder.many(2, { teamName: mockTeamName });
+    mocked(TeamAsync.getTeam).mockResolvedValueOnce(null);
+    mocked(TeamAsync.getTeam).mockResolvedValueOnce(null);
+    mocked(TeamAsync.getTeam).mockResolvedValueOnce(null);
+    mocked(TeamAsync.getTeam).mockResolvedValueOnce(mockTeams[1]);
+    const response: MessageEmbed = await newTeam(mockTeamName, mockTeams[1].players);
+    expect(response).toHaveProperty("title", "Team Name Taken");
   });
 });

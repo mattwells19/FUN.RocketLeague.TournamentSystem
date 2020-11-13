@@ -1,6 +1,7 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 
 export interface ITeam {
+  _id: Types.ObjectId;
   teamName: string;
   players: string[];
   seed: number;
