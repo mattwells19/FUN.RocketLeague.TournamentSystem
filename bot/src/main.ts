@@ -1,5 +1,6 @@
 import { Collection, MessageEmbed, User } from "discord.js";
 import { ErrorEmbed } from "./EmbedHelper";
+import { startRound } from "./quals";
 import { autoSeedTeams, getAllSeeds, getTeamSeed, resetSeeds, seedTeam } from "./seed";
 import { newTeam } from "./team";
 
@@ -26,6 +27,9 @@ export default async function processCommands(
       const seed = parseInt(args.pop() ?? "-1");
       const teamName = args.join(" ");
       return await seedTeam(teamName, seed === 0 ? -1 : seed);
+    } else if (command === "start") {
+      // TODO - make admin command
+      return await startRound();
     }
   } catch (e) {
     return ErrorEmbed("Error Processing Command", e.message);

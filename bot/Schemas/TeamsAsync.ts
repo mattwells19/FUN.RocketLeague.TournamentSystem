@@ -1,7 +1,7 @@
 import { MongooseFilterQuery, Document, Types } from "mongoose";
 import Teams, { ITeam } from "./Teams";
 
-type QueryOptions = MongooseFilterQuery<Pick<Document, "_id">>;
+export type QueryOptions = MongooseFilterQuery<Pick<Document, "_id">>;
 
 const convertAll = (docs: Document[]): ITeam[] => {
   return docs.map((d) => {
