@@ -3,6 +3,7 @@ import { Schema, model, Types } from "mongoose";
 export interface ITeam {
   _id: Types.ObjectId;
   teamName: string;
+  channelId: string;
   players: string[];
   seed: number;
   wins: number;
@@ -23,6 +24,7 @@ const TeamSchema = new Schema(
         message: (props) => `Team must consist of 3 players, got ${props.value.length}`,
       },
     },
+    channelId: String,
     seed: Number,
     wins: Number,
     losses: Number,

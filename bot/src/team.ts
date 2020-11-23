@@ -30,6 +30,7 @@ export async function newTeam(teamName: string, teamMemberIds: string[]): Promis
   return new Teams({
     teamName,
     players: teamMemberIds,
+    channelId: "",
     seed: 0,
     wins: 0,
     losses: 0,

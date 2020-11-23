@@ -4,7 +4,7 @@ import { connect } from "mongoose";
 import processCommands from "./main";
 
 config();
-const client = new Client();
+export const client = new Client();
 
 const prefix = process.env.NODE_ENV === "dev" ? "_" : "-";
 
@@ -32,9 +32,7 @@ client.on("message", async (msg: Message) => {
   // console.log(args);
   // console.log(mentions);
 
-  await msg.channel.send(
-    await processCommands(command, author, args, mentions)
-  );
+  await msg.channel.send(await processCommands(command, author, args, mentions));
 
   await msg.channel.stopTyping();
 });

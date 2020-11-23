@@ -1,4 +1,5 @@
 import { Collection, MessageEmbed, User } from "discord.js";
+import createTeamChannels from "./ChannelHelper";
 import { ErrorEmbed } from "./EmbedHelper";
 import { startRound } from "./quals";
 import { autoSeedTeams, getAllSeeds, getTeamSeed, resetSeeds, seedTeam } from "./seed";
@@ -30,9 +31,12 @@ export default async function processCommands(
     } else if (command === "start") {
       // TODO - make admin command
       return await startRound();
+    } else if (command === "channels") {
+      // TODO - should not be its own command
+      await createTeamChannels();
     }
   } catch (e) {
-    return ErrorEmbed("Error Processing Command", e.message);
+    return ErrorEmbed("Error Processing Command", e.message + e.stack);
   }
   return "Hello";
 }
