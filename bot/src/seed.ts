@@ -1,14 +1,6 @@
 import { MessageEmbed } from "discord.js";
 import { ErrorEmbed, SuccessEmbed } from "./EmbedHelper";
-import { ITeam } from "../Schemas/Teams";
-import {
-  getTeam,
-  getTeams,
-  updateTeamById,
-  getNumberOfTeams,
-  findAndUpdateTeam,
-  updateMultipleTeams,
-} from "../Schemas/TeamsAsync";
+import Teams, { ITeam } from "../Schemas/Teams";
 
 const sortTeamsBySeed = (a: ITeam, b: ITeam): number => {
   // Unseeded teams should show below seeded teams
@@ -19,8 +11,8 @@ const sortTeamsBySeed = (a: ITeam, b: ITeam): number => {
 };
 
 const getAvailableSeeds = async (): Promise<number[]> => {
-  const numberOfTeams: number = await getNumberOfTeams();
-  const seededDocs = await getTeams({ seed: { $ne: -1 } });
+  const numberOfTeams: number = await Teams.count();
+  const seededDocs = await Teams.get({ seed: { $ne: -1 } });
   const seedsTaken: number[] = seededDocs.map((team) => team.seed);
 
   return Array.from(Array(numberOfTeams).keys())
@@ -32,19 +24,19 @@ export async function seedTeam(teamName: string, seed: number): Promise<MessageE
   if (isNaN(seed)) return ErrorEmbed("Invalid Seed", "Seed must be a number.");
 
   // Validate seed is less than the number of teams
-  const numberOfTeams: number = await getNumberOfTeams();
+  const numberOfTeams: number = await Teams.count();
   if (seed > numberOfTeams)
     return ErrorEmbed("Invalid Seed", `There are only **${numberOfTeams}** teams. You can't have a **${seed}** seed.`);
 
   // Validate team exists
-  const team = await getTeam({ teamName: new RegExp(`^${teamName}$`, "i") });
+  const team = await Teams.getOne({ teamName: new RegExp(`^${teamName}$`, "i") });
   if (!team) return ErrorEmbed("Team Not Found", `No team with the name **${teamName}** was found.`);
 
-  const seedTaken = await getTeam({ seed });
-  if (seedTaken) await updateTeamById(seedTaken._id, { seed: -1 });
+  const seedTaken = await Teams.getOne({ seed });
+  if (seedTaken) await Teams.updateWithId(seedTaken._id, { seed: -1 });
 
   // Update doc with seed
-  await updateTeamById(team._id, { seed });
+  await Teams.updateWithId(team._id, { seed });
 
   return seedTaken
     ? SuccessEmbed(
@@ -62,7 +54,7 @@ export async function autoSeedTeams(): Promise<MessageEmbed> {
   for (let i = 0; i < numberOfTeamsToSeed; i++) {
     const randomSeedIndex: number = Math.floor(Math.random() * availableSeeds.length);
     const randomSeed: number = availableSeeds.splice(randomSeedIndex, 1)[0];
-    const updatedTeam = await findAndUpdateTeam({ seed: -1 }, { seed: randomSeed });
+    const updatedTeam = await Teams.updateOne({ seed: -1 }, { seed: randomSeed });
     if (updatedTeam) updatedTeams.push(updatedTeam);
   }
 
@@ -70,12 +62,12 @@ export async function autoSeedTeams(): Promise<MessageEmbed> {
 }
 
 export async function resetSeeds(): Promise<MessageEmbed> {
-  await updateMultipleTeams({}, { seed: -1 });
+  await Teams.update({}, { seed: -1 });
   return SuccessEmbed("Seeds Reset", "All seeds have been reset.");
 }
 
 export async function getTeamSeed(teamName: string): Promise<MessageEmbed> {
-  const team = await getTeam({ teamName: new RegExp(`^${teamName}$`, "i") });
+  const team = await Teams.getOne({ teamName: new RegExp(`^${teamName}$`, "i") });
   if (team) {
     const seed: number = team.seed;
     if (seed === -1)
@@ -85,7 +77,7 @@ export async function getTeamSeed(teamName: string): Promise<MessageEmbed> {
 }
 
 export async function getAllSeeds(): Promise<MessageEmbed> {
-  const teams: ITeam[] = await getTeams({});
+  const teams: ITeam[] = await Teams.get({});
 
   let teamMessage = "";
   teams.sort(sortTeamsBySeed).forEach((team) => {

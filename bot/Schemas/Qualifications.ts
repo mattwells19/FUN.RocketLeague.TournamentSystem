@@ -1,4 +1,5 @@
 import { Schema, model, Types } from "mongoose";
+import { ModelAsync } from "./ModelAsync";
 
 export interface IMatch {
   blueScore: number;
@@ -58,4 +59,6 @@ const QualificationsSchema = new Schema(
   { collection: "qualifications" }
 );
 
-export default model("Qualifications", QualificationsSchema);
+const QualificationsModel = model("Qualifications", QualificationsSchema);
+
+export default new ModelAsync<IQualification>(QualificationsModel);

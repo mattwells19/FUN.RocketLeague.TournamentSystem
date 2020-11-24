@@ -6,6 +6,7 @@ import { startRound } from "./quals";
 import reportMatch from "./report";
 import { autoSeedTeams, getAllSeeds, getTeamSeed, resetSeeds, seedTeam } from "./seed";
 import { newTeam } from "./team";
+import { deleteTournament, newTournament, listTournaments } from "./tournament";
 
 export default async function processCommands(
   command: string, // command with prefix removed
@@ -17,7 +18,7 @@ export default async function processCommands(
     if (command === "team") {
       const teamWithAuthor = mentions.map((user) => user.id).concat(author.id);
       const team = Array.from(new Set(teamWithAuthor));
-      const teamName = args.join(" ");
+      const teamName = args.join(" ").trim();
       return await newTeam(teamName, team);
     } else if (command === "seed") {
       if (args.length === 0) return await getAllSeeds();
@@ -41,6 +42,18 @@ export default async function processCommands(
       return await reportMatch(author.id, parseInt(winningTeamScore), parseInt(losingTeamScore));
     } else if (command === "confirm") {
       return await confirmMatch(author.id);
+    } else if (command === "tournament") {
+      // TODO - make admin command
+      if (args.length === 0) {
+        return await listTournaments();
+      } else if (args.includes("delete")) {
+        const tournamentName = args.filter((value) => value !== "delete").join(" ");
+        return await deleteTournament(tournamentName);
+      } else {
+        const tournamentDate = args.pop() ?? "";
+        const tournamentName = args.join(" ").trim();
+        return await newTournament(tournamentName, tournamentDate);
+      }
     }
   } catch (e) {
     return ErrorEmbed("Error Processing Command", e.stack);

@@ -3,11 +3,11 @@ import mockingoose from "mockingoose";
 import * as faker from "faker";
 import { MessageEmbed } from "discord.js";
 import { TeamBuilder } from "./Builders";
-import * as TeamsAsync from "../Schemas/TeamsAsync";
+import Teams from "../Schemas/Teams";
 import { mocked } from "ts-jest/utils";
 import { ITeam } from "../Schemas/Teams";
 
-jest.mock("../Schemas/TeamsAsync");
+jest.mock("../Schemas/Teams");
 
 beforeEach(() => {
   mockingoose.resetAll();
@@ -17,10 +17,10 @@ beforeEach(() => {
 describe("seed tests", () => {
   it("assigns a team a seed correctly", async () => {
     const mockTeams = TeamBuilder.many(8);
-    mocked(TeamsAsync.getNumberOfTeams).mockResolvedValue(8);
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockTeams[0]);
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(null);
-    mocked(TeamsAsync.updateTeamById).mockResolvedValueOnce(null);
+    mocked(Teams.count).mockResolvedValue(8);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockTeams[0]);
+    mocked(Teams.getOne).mockResolvedValueOnce(null);
+    mocked(Teams.updateWithId).mockResolvedValueOnce(null);
 
     const mockSeed = faker.random.number(8);
     const response: MessageEmbed = await Seed.seedTeam(mockTeams[0].teamName, mockSeed);
@@ -31,10 +31,10 @@ describe("seed tests", () => {
   it("transfers seeds properly", async () => {
     const mockTeams = TeamBuilder.many(8);
     mockTeams[5].seed = 2;
-    mocked(TeamsAsync.getNumberOfTeams).mockResolvedValue(8);
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockTeams[0]);
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockTeams[5]);
-    const mockUpdate = mocked(TeamsAsync.updateTeamById);
+    mocked(Teams.count).mockResolvedValue(8);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockTeams[0]);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockTeams[5]);
+    const mockUpdate = mocked(Teams.updateWithId);
 
     const response: MessageEmbed = await Seed.seedTeam(mockTeams[0].teamName, 2);
     expect(mockUpdate).toBeCalledTimes(2);
@@ -52,7 +52,7 @@ describe("seed tests", () => {
     const mockTeams = TeamBuilder.many(8);
     mockTeams[4].seed = 2;
     mockTeams[2].seed = 8;
-    mocked(TeamsAsync.getTeams).mockResolvedValue(mockTeams);
+    mocked(Teams.get).mockResolvedValue(mockTeams);
 
     const response: MessageEmbed = await Seed.getAllSeeds();
     expect(response).toHaveProperty("title", "All Current Seeds");
@@ -72,7 +72,7 @@ describe("seed tests", () => {
   ])("gets specific team's seed", async (mockTeam, seed) => {
     if (mockTeam) {
       mockTeam.seed = seed;
-      mocked(TeamsAsync.getTeam).mockResolvedValue(mockTeam);
+      mocked(Teams.getOne).mockResolvedValue(mockTeam);
 
       const response: MessageEmbed = await Seed.getTeamSeed(mockTeam.teamName);
       expect(response).toHaveProperty("title", `${mockTeam.teamName}'s Seed`);
@@ -81,7 +81,7 @@ describe("seed tests", () => {
         expect(response).toHaveProperty("description", `**${mockTeam.teamName}** does not currently have a seed.`);
       else expect(response).toHaveProperty("description", `**${mockTeam.teamName}** is the **${mockTeam.seed}** seed.`);
     } else {
-      mocked(TeamsAsync.getTeam).mockResolvedValue(mockTeam);
+      mocked(Teams.getOne).mockResolvedValue(mockTeam);
       const fakeTeamName = faker.random.word();
       const response: MessageEmbed = await Seed.getTeamSeed(fakeTeamName);
       expect(response).toHaveProperty("title", "Team Not Found");
@@ -90,8 +90,8 @@ describe("seed tests", () => {
   });
 
   it("rejects non-existant team", async () => {
-    mocked(TeamsAsync.getNumberOfTeams).mockResolvedValue(8);
-    mocked(TeamsAsync.getTeam).mockResolvedValue(null);
+    mocked(Teams.count).mockResolvedValue(8);
+    mocked(Teams.getOne).mockResolvedValue(null);
     const fakeTeamName = faker.random.word();
     const response: MessageEmbed = await Seed.seedTeam(fakeTeamName, faker.random.number(8));
     expect(response).toHaveProperty("title", "Team Not Found");
@@ -99,7 +99,7 @@ describe("seed tests", () => {
   });
 
   it("rejects an invalid seed", async () => {
-    mocked(TeamsAsync.getNumberOfTeams).mockResolvedValue(8);
+    mocked(Teams.count).mockResolvedValue(8);
 
     const fakeTeamName = faker.random.word();
     const response: MessageEmbed = await Seed.seedTeam(fakeTeamName, 9);
@@ -115,10 +115,10 @@ describe("seed tests", () => {
 
   it("automatically assigns seeds without dupes", async () => {
     const mockTeams = TeamBuilder.many(8);
-    mocked(TeamsAsync.getNumberOfTeams).mockResolvedValue(8);
-    mocked(TeamsAsync.getTeams).mockResolvedValueOnce(mockTeams);
+    mocked(Teams.count).mockResolvedValue(8);
+    mocked(Teams.get).mockResolvedValueOnce(mockTeams);
     const seedsUsed = Array(8).fill(false);
-    const mockUpdate = mocked(TeamsAsync.findAndUpdateTeam);
+    const mockUpdate = mocked(Teams.updateOne);
 
     await Seed.autoSeedTeams();
     expect(mockUpdate).toHaveBeenCalledTimes(8);
@@ -132,7 +132,7 @@ describe("seed tests", () => {
   });
 
   it("updates all team's seeds to -1", async () => {
-    const mockUpdate = mocked(TeamsAsync.updateMultipleTeams);
+    const mockUpdate = mocked(Teams.update);
 
     await Seed.resetSeeds();
     expect(mockUpdate).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ seed: -1 }));
@@ -140,8 +140,8 @@ describe("seed tests", () => {
 
   it("does not add footer when no seeds available", async () => {
     const mockTeams = TeamBuilder.many(8);
-    mocked(TeamsAsync.getTeams).mockResolvedValue(mockTeams);
-    mocked(TeamsAsync.getNumberOfTeams).mockResolvedValue(0);
+    mocked(Teams.get).mockResolvedValue(mockTeams);
+    mocked(Teams.count).mockResolvedValue(0);
 
     const response: MessageEmbed = await Seed.getAllSeeds();
     expect(response).toHaveProperty("title", "All Current Seeds");

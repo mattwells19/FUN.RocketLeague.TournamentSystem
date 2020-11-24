@@ -1,5 +1,4 @@
-import { getTeams } from "../Schemas/TeamsAsync";
-import { ITeam } from "../Schemas/Teams";
+import Teams, { ITeam } from "../Schemas/Teams";
 import { IQualification } from "../Schemas/Qualifications";
 
 const groupByRecord = (allTeams: ITeam[]): Map<number, Array<ITeam>> => {
@@ -16,7 +15,7 @@ const groupByRecord = (allTeams: ITeam[]): Map<number, Array<ITeam>> => {
 
 export default async function generateMatchups(): Promise<IQualification[]> {
   const matchups: IQualification[] = [];
-  const teams = await getTeams({});
+  const teams = await Teams.get({});
   const teamGroups = groupByRecord(teams);
   teamGroups.forEach((teams) => {
     const firstHalf = teams.splice(0, Math.floor(teams.length / 2));

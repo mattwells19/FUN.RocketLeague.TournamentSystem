@@ -1,8 +1,7 @@
 import { Message, MessageEmbed, OverwriteResolvable, TextChannel } from "discord.js";
 import { uniqueNamesGenerator, Config, adjectives, colors, animals } from "unique-names-generator";
 import { IQualification } from "../Schemas/Qualifications";
-import { ITeam } from "../Schemas/Teams";
-import { findAndUpdateTeamWithId, getTeams, getTeamWithId } from "../Schemas/TeamsAsync";
+import Teams, { ITeam } from "../Schemas/Teams";
 import { InfoEmbed, SuccessEmbed } from "./EmbedHelper";
 import { client } from "./index";
 
@@ -16,7 +15,7 @@ async function fetchGuild() {
 }
 
 export default async function createTeamChannels(): Promise<void> {
-  const teams = await getTeams({});
+  const teams = await Teams.get({});
   const Guild = await fetchGuild();
 
   for (const team of teams) {
@@ -50,7 +49,7 @@ export default async function createTeamChannels(): Promise<void> {
       })
       // once the channel gets created send the team a message letting them know it's up
       .then(async (newChannel) => {
-        const teamChannelIdPromise = findAndUpdateTeamWithId(team._id, { channelId: newChannel.id });
+        const teamChannelIdPromise = Teams.updateWithId(team._id, { channelId: newChannel.id });
         const newChannelMsg = newChannel.send(
           SuccessEmbed(
             `Welcome to your team chat ${team.teamName}!`,
@@ -64,8 +63,8 @@ export default async function createTeamChannels(): Promise<void> {
 
 export async function sendMatchDetails(matches: IQualification[]): Promise<void> {
   for (const match of matches) {
-    const blueTeamPromise = getTeamWithId(match.blueTeam);
-    const orangeTeamPromise = getTeamWithId(match.orangeTeam);
+    const blueTeamPromise = Teams.getWithId(match.blueTeam);
+    const orangeTeamPromise = Teams.getWithId(match.orangeTeam);
     const [blueTeam, orangeTeam] = await Promise.all([blueTeamPromise, orangeTeamPromise]);
 
     if (!blueTeam || !orangeTeam) throw Error("Did not find orange or blue team when sending match details");

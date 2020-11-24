@@ -1,7 +1,6 @@
 import { MessageEmbed } from "discord.js";
-import { IQualification } from "../Schemas/Qualifications";
-import { getMatches, updateMatchWithId } from "../Schemas/QualificationsAsync";
-import { getTeam } from "../Schemas/TeamsAsync";
+import Qualification, { IQualification } from "../Schemas/Qualifications";
+import Teams from "../Schemas/Teams";
 import { ErrorEmbed, SuccessEmbed } from "./EmbedHelper";
 
 export default async function reportMatch(
@@ -9,13 +8,13 @@ export default async function reportMatch(
   winnerScore: number,
   loserScore: number
 ): Promise<MessageEmbed> {
-  const reporterTeam = await getTeam({ players: reporterId });
+  const reporterTeam = await Teams.getOne({ players: reporterId });
 
   if (!reporterTeam) throw Error("Reporter's team not found");
 
-  const latestMatch = await getMatches(reporterTeam._id).then((matchesWithReporter) =>
-    matchesWithReporter.reduce((prev, curr) => (curr.round > prev.round ? curr : prev))
-  );
+  const latestMatch = await Qualification.get({
+    $or: [{ blueTeam: reporterTeam._id }, { orangeTeam: reporterTeam._id }],
+  }).then((matchesWithReporter) => matchesWithReporter.reduce((prev, curr) => (curr.round > prev.round ? curr : prev)));
 
   if (latestMatch.matches.find((game) => game.reported && game.reported.equals(reporterTeam._id) && !game.confirmed)) {
     return ErrorEmbed(
@@ -38,6 +37,6 @@ export default async function reportMatch(
     reported: reporterTeam._id,
   };
 
-  await updateMatchWithId(latestMatch._id, matchUpdate);
+  await Qualification.updateWithId(latestMatch._id, matchUpdate);
   return SuccessEmbed("Match Reported", "Match reported. Awaiting confirmation.");
 }

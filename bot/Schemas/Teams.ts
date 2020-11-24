@@ -1,4 +1,5 @@
 import { Schema, model, Types } from "mongoose";
+import { ModelAsync } from "./ModelAsync";
 
 export interface ITeam {
   _id: Types.ObjectId;
@@ -19,10 +20,6 @@ const TeamSchema = new Schema(
     players: {
       type: [String],
       required: true,
-      validate: {
-        validator: (player_ids: string[]) => player_ids.length === 3,
-        message: (props) => `Team must consist of 3 players, got ${props.value.length}`,
-      },
     },
     channelId: String,
     seed: Number,
@@ -32,4 +29,6 @@ const TeamSchema = new Schema(
   { collection: "teams" }
 );
 
-export default model("Team", TeamSchema);
+const TeamsModel = model("Team", TeamSchema);
+
+export default new ModelAsync<ITeam>(TeamsModel);

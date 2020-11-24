@@ -1,13 +1,13 @@
 import { mocked } from "ts-jest/utils";
-import * as TeamsAsync from "../Schemas/TeamsAsync";
-import * as QualificationsAsync from "../Schemas/QualificationsAsync";
 import { generateMatchScores, QualBuilder, QualMatchBuilder, TeamBuilder } from "./Builders";
 import reportMatch from "../src/report";
 import * as faker from "faker";
 import { IMatch, IQualification } from "../Schemas/Qualifications";
+import Teams from "../Schemas/Teams";
+import Qualifications from "../Schemas/Qualifications";
 
-jest.mock("../Schemas/TeamsAsync");
-jest.mock("../Schemas/QualificationsAsync");
+jest.mock("../Schemas/Teams");
+jest.mock("../Schemas/Qualifications");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -21,9 +21,9 @@ describe("report match tests", () => {
       const mockMatch = QualMatchBuilder.single();
       const mockQual = QualBuilder.single({ [team]: mockReportingTeam._id, matches: [mockMatch] });
 
-      mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockReportingTeam);
-      mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQual]);
-      const mockUpdateMatch = mocked(QualificationsAsync.updateMatchWithId);
+      mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
+      mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
+      const mockUpdateMatch = mocked(Qualifications.updateWithId);
       const [higherScore, lowerScore] = generateMatchScores();
 
       const response = await reportMatch(mockReportingTeam.players[0], higherScore, lowerScore);
@@ -44,7 +44,7 @@ describe("report match tests", () => {
   );
 
   it("throws error when reporting team not found", async () => {
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(null);
+    mocked(Teams.getOne).mockResolvedValueOnce(null);
     await expect(reportMatch(faker.random.uuid(), faker.random.number(10), faker.random.number(10))).rejects.toThrow();
   });
 
@@ -55,9 +55,9 @@ describe("report match tests", () => {
     const mockQualRoundOne = QualBuilder.single({ round: 1, matches: [mockMatchConfirmed] });
     const mockQualRoundTwo = QualBuilder.single({ round: 2, matches: [mockMatchUnconfirmed] });
 
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockReportingTeam);
-    mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQualRoundOne, mockQualRoundTwo]);
-    const mockUpdateMatch = mocked(QualificationsAsync.updateMatchWithId);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
+    mocked(Qualifications.get).mockResolvedValueOnce([mockQualRoundOne, mockQualRoundTwo]);
+    const mockUpdateMatch = mocked(Qualifications.updateWithId);
     const [higherScore, lowerScore] = generateMatchScores();
 
     const response = await reportMatch(mockReportingTeam.players[0], higherScore, lowerScore);
@@ -75,9 +75,9 @@ describe("report match tests", () => {
     const mockMatch = QualMatchBuilder.single({ reported: mockReportingTeam._id, confirmed: false });
     const mockQual = QualBuilder.single({ matches: [mockMatch] });
 
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockReportingTeam);
-    mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQual]);
-    const mockUpdateMatch = mocked(QualificationsAsync.updateMatchWithId);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
+    mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
+    const mockUpdateMatch = mocked(Qualifications.updateWithId);
     const [higherScore, lowerScore] = generateMatchScores();
 
     const response = await reportMatch(mockReportingTeam.players[0], higherScore, lowerScore);
@@ -96,9 +96,9 @@ describe("report match tests", () => {
     mockMatches.push(QualMatchBuilder.single({ reported: null }));
     const mockQual = QualBuilder.single({ blueTeam: mockReportingTeam._id, matches: mockMatches });
 
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockReportingTeam);
-    mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQual]);
-    const mockUpdateMatch = mocked(QualificationsAsync.updateMatchWithId);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
+    mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
+    const mockUpdateMatch = mocked(Qualifications.updateWithId);
     const [higherScore, lowerScore] = generateMatchScores();
 
     const expectedMatchesUpdate: IMatch[] = [
@@ -137,8 +137,8 @@ describe("report match tests", () => {
     const mockMatch = QualMatchBuilder.single({ reported: mockReportingTeam._id, confirmed: true });
     const mockQual = QualBuilder.single({ matches: [mockMatch] });
 
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockReportingTeam);
-    mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQual]);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
+    mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
 
     const response = await reportMatch(mockReportingTeam.players[0], faker.random.number(10), faker.random.number(10));
     expect(response).toHaveProperty("title", "No Matches to Report");

@@ -1,8 +1,7 @@
 import { MessageEmbed } from "discord.js";
-import { IMatch, IQualification } from "../Schemas/Qualifications";
-import { getMatches, updateMatchWithId } from "../Schemas/QualificationsAsync";
-import { findAndUpdateTeamWithId, getTeam } from "../Schemas/TeamsAsync";
+import Qualification, { IMatch, IQualification } from "../Schemas/Qualifications";
 import { ErrorEmbed, SuccessEmbed } from "./EmbedHelper";
+import Teams from "../Schemas/Teams";
 
 const determineWinningTeam = (match: IQualification): "blue" | "orange" => {
   let blueWins = 0,
@@ -15,13 +14,13 @@ const determineWinningTeam = (match: IQualification): "blue" | "orange" => {
 };
 
 export default async function confirmMatch(confirmerId: string): Promise<MessageEmbed> {
-  const confirmerTeam = await getTeam({ players: confirmerId });
+  const confirmerTeam = await Teams.getOne({ players: confirmerId });
 
   if (!confirmerTeam) throw Error("Confirmer's team not found");
 
-  const latestMatch = await getMatches(confirmerTeam._id).then((matchesWithReporter) =>
-    matchesWithReporter.reduce((prev, curr) => (curr.round > prev.round ? curr : prev))
-  );
+  const latestMatch = await Qualification.get({
+    $or: [{ blueTeam: confirmerTeam._id }, { orangeTeam: confirmerTeam._id }],
+  }).then((matchesWithReporter) => matchesWithReporter.reduce((prev, curr) => (curr.round > prev.round ? curr : prev)));
   const currGameIndex = latestMatch.matches.findIndex((game) => game.reported && !game.confirmed);
 
   if (currGameIndex < 0)
@@ -44,16 +43,16 @@ export default async function confirmMatch(confirmerId: string): Promise<Message
     matchUpdate.matches.push({} as IMatch);
   } else {
     const blueTeamWonSeries = determineWinningTeam(matchUpdate) === "blue";
-    const blueTeamUpdatePromise = findAndUpdateTeamWithId(matchUpdate.blueTeam, {
+    const blueTeamUpdatePromise = Teams.updateWithId(matchUpdate.blueTeam, {
       $inc: blueTeamWonSeries ? { wins: 1 } : { losses: 1 },
     });
-    const orangeTeamUpdatePromise = findAndUpdateTeamWithId(matchUpdate.orangeTeam, {
+    const orangeTeamUpdatePromise = Teams.updateWithId(matchUpdate.orangeTeam, {
       $inc: !blueTeamWonSeries ? { wins: 1 } : { losses: 1 },
     });
     await Promise.all([blueTeamUpdatePromise, orangeTeamUpdatePromise]);
   }
 
-  await updateMatchWithId(latestMatch._id, matchUpdate);
+  await Qualification.updateWithId(latestMatch._id, matchUpdate);
   return SuccessEmbed(
     "Match Confirmed",
     isEndOfSeries

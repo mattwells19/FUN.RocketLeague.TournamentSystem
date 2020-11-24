@@ -1,13 +1,13 @@
 import { mocked } from "ts-jest/utils";
-import * as TeamsAsync from "../Schemas/TeamsAsync";
-import * as QualificationsAsync from "../Schemas/QualificationsAsync";
+import Teams from "../Schemas/Teams";
+import Qualifications from "../Schemas/Qualifications";
 import { generateMatchScores, QualBuilder, QualMatchBuilder, TeamBuilder } from "./Builders";
 import reportMatch from "../src/report";
 import * as faker from "faker";
 import confirmMatch from "../src/confirm";
 
-jest.mock("../Schemas/TeamsAsync");
-jest.mock("../Schemas/QualificationsAsync");
+jest.mock("../Schemas/Teams");
+jest.mock("../Schemas/Qualifications");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -15,7 +15,7 @@ beforeEach(() => {
 
 describe("confirm match tests", () => {
   it("throws error when confirming team not found", async () => {
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(null);
+    mocked(Teams.getOne).mockResolvedValueOnce(null);
     await expect(reportMatch(faker.random.uuid(), faker.random.number(10), faker.random.number(10))).rejects.toThrow();
   });
 
@@ -24,8 +24,8 @@ describe("confirm match tests", () => {
     const mockMatch = QualMatchBuilder.single({ reported: confirmed ? undefined : null, confirmed });
     const mockQual = QualBuilder.single({ blueTeam: mockConfirmingTeam._id, matches: [mockMatch] });
 
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockConfirmingTeam);
-    mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQual]);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockConfirmingTeam);
+    mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
     const response = await confirmMatch(mockConfirmingTeam.players[0]);
     expect(response).toHaveProperty("title", "No Matches Reported");
   });
@@ -35,8 +35,8 @@ describe("confirm match tests", () => {
     const mockMatch = QualMatchBuilder.single({ reported: mockConfirmingTeam._id, confirmed: false });
     const mockQual = QualBuilder.single({ blueTeam: mockConfirmingTeam._id, matches: [mockMatch] });
 
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockConfirmingTeam);
-    mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQual]);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockConfirmingTeam);
+    mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
     const response = await confirmMatch(mockConfirmingTeam.players[0]);
     expect(response).toHaveProperty("title", "Cannot Confirm Match");
   });
@@ -63,10 +63,10 @@ describe("confirm match tests", () => {
       matches: [...mockMatch, mockMatchTwo],
     });
 
-    mocked(TeamsAsync.getTeam).mockResolvedValueOnce(mockConfirmingTeam);
-    mocked(QualificationsAsync.getMatches).mockResolvedValueOnce([mockQual]);
-    const mockUpdateMatch = mocked(QualificationsAsync.updateMatchWithId);
-    // const mockFindAndUpdateTeamWithId = mocked(TeamsAsync.findAndUpdateTeamWithId);
+    mocked(Teams.getOne).mockResolvedValueOnce(mockConfirmingTeam);
+    mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
+    const mockUpdateMatch = mocked(Qualifications.updateWithId);
+    // const mockFindAndUpdateTeamWithId = mocked(Teams.findAndUpdateTeamWithId);
     const response = await confirmMatch(mockConfirmingTeam.players[0]);
     expect(response).toHaveProperty("title", "Match Confirmed");
     expect(mockUpdateMatch).toHaveBeenCalledWith(

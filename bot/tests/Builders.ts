@@ -4,6 +4,7 @@ import { ITeam } from "../Schemas/Teams";
 import * as faker from "faker";
 import { Types } from "mongoose";
 import { IMatch, IQualification } from "../Schemas/Qualifications";
+import { IBestOfs, ITournament } from "../Schemas/Tournaments";
 
 class BuildTeams {
   single(overrides?: Partial<ITeam>): ITeam {
@@ -88,4 +89,46 @@ const generateMatchScores = (max = 10): [number, number] => {
   else return [score2, score1];
 };
 
-export { TeamBuilder, QualBuilder, QualMatchBuilder, generateMatchScores };
+class BuildBestOfs {
+  single(overrides?: Partial<IBestOfs>): IBestOfs {
+    return {
+      quals: faker.random.number(10),
+      quarters: faker.random.number(10),
+      semis: faker.random.number(10),
+      finals: faker.random.number(10),
+    } as IBestOfs;
+  }
+
+  many(count: number, overrides?: Partial<IBestOfs>): IBestOfs[] {
+    const quals: IBestOfs[] = [];
+    for (let i = 0; i < count; i++) {
+      const newQual = this.single(overrides);
+      quals.push(newQual);
+    }
+    return quals;
+  }
+}
+const BestOfsBuilder = new BuildBestOfs();
+
+class BuildTournament {
+  single(overrides?: Partial<ITournament>): ITournament {
+    return {
+      name: overrides?.name ?? faker.random.words(),
+      registration_open: overrides?.registration_open ?? false,
+      startDateTime: overrides?.startDateTime ?? faker.date.future(),
+      bestOfs: overrides?.bestOfs ?? BestOfsBuilder.single(),
+    } as ITournament;
+  }
+
+  many(count: number, overrides?: Partial<ITournament>): ITournament[] {
+    const quals: ITournament[] = [];
+    for (let i = 0; i < count; i++) {
+      const newQual = this.single(overrides);
+      quals.push(newQual);
+    }
+    return quals;
+  }
+}
+const TournamentBuilder = new BuildTournament();
+
+export { TeamBuilder, QualBuilder, QualMatchBuilder, generateMatchScores, TournamentBuilder, BestOfsBuilder };
