@@ -1,7 +1,9 @@
 import { Collection, MessageEmbed, User } from "discord.js";
 import createTeamChannels from "./ChannelHelper";
+import confirmMatch from "./confirm";
 import { ErrorEmbed } from "./EmbedHelper";
 import { startRound } from "./quals";
+import reportMatch from "./report";
 import { autoSeedTeams, getAllSeeds, getTeamSeed, resetSeeds, seedTeam } from "./seed";
 import { newTeam } from "./team";
 
@@ -34,9 +36,14 @@ export default async function processCommands(
     } else if (command === "channels") {
       // TODO - should not be its own command
       await createTeamChannels();
+    } else if (command === "report") {
+      const [winningTeamScore, losingTeamScore] = args[0].split("-");
+      return await reportMatch(author.id, parseInt(winningTeamScore), parseInt(losingTeamScore));
+    } else if (command === "confirm") {
+      return await confirmMatch(author.id);
     }
   } catch (e) {
-    return ErrorEmbed("Error Processing Command", e.message + e.stack);
+    return ErrorEmbed("Error Processing Command", e.stack);
   }
   return "Hello";
 }

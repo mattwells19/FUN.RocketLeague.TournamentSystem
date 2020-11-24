@@ -1,4 +1,4 @@
-import { MongooseFilterQuery, Document, Types } from "mongoose";
+import { MongooseFilterQuery, Document, Types, MongooseUpdateQuery } from "mongoose";
 import Teams, { ITeam } from "./Teams";
 
 export type QueryOptions = MongooseFilterQuery<Pick<Document, "_id">>;
@@ -52,7 +52,10 @@ export async function findAndUpdateTeam(options: QueryOptions, updates: Partial<
   return convert(await Teams.findOneAndUpdate(options, updates, { new: true }));
 }
 
-export async function findAndUpdateTeamWithId(id: Types.ObjectId, updates: Partial<ITeam>): Promise<ITeam | null> {
+export async function findAndUpdateTeamWithId(
+  id: Types.ObjectId,
+  updates: Partial<ITeam> | MongooseUpdateQuery<Pick<Document, "_id">>
+): Promise<ITeam | null> {
   return convert(await Teams.findByIdAndUpdate(id, updates, { new: true }));
 }
 

@@ -59,7 +59,7 @@ describe("Swiss tests", () => {
     mocked(QualificationsAsync.getAllMatches).mockResolvedValue([]);
     const mockQual = QualBuilder.single();
     mocked(generateMatchups).mockResolvedValueOnce([mockQual]);
-    const addMatchesMock = mocked(QualificationsAsync.addMatches).mockResolvedValueOnce();
+    const addMatchesMock = mocked(QualificationsAsync.addMatches).mockResolvedValueOnce([]);
     mocked(ChannelHelper.sendMatchDetails).mockResolvedValue();
     const response = await startRound();
     expect(response).toHaveProperty("title", "Matches Generated");

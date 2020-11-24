@@ -80,4 +80,12 @@ class BuildQualMatches {
 }
 const QualMatchBuilder = new BuildQualMatches();
 
-export { TeamBuilder, QualBuilder, QualMatchBuilder };
+const generateMatchScores = (max = 10): [number, number] => {
+  const score1 = faker.random.number(max);
+  let score2 = faker.random.number(max);
+  while (score2 === score1) score2 = faker.random.number(max);
+  if (score1 > score2) return [score1, score2];
+  else return [score2, score1];
+};
+
+export { TeamBuilder, QualBuilder, QualMatchBuilder, generateMatchScores };

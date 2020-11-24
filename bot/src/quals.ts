@@ -24,7 +24,7 @@ export async function startRound(): Promise<MessageEmbed> {
           ? previousMatches.reduce((prev, curr) => (prev.round > curr.round ? prev : curr)).round
           : 0;
       const newRoundMatches: IQualification[] = matches.map((m) => ({ ...m, round: lastRound + 1 }));
-      await addMatches(newRoundMatches).then(() => sendMatchDetails(newRoundMatches));
+      await addMatches(newRoundMatches).then(sendMatchDetails);
       return SuccessEmbed(
         "Matches Generated",
         "Qualification matches have been generated and teams have been notified."

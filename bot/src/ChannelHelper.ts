@@ -92,9 +92,9 @@ const generateLobbyInfo = (): ILobbyInfo => {
 };
 
 const MatchReadyEmbed = (opponent: ITeam, match: IQualification, lobbyInfo: ILobbyInfo): MessageEmbed => {
-  const isBlueTeam = opponent._id.equals(match.blueTeam);
+  const isBlueTeam = opponent._id.equals(match.orangeTeam);
 
-  return InfoEmbed("Your match is ready!", `Round ${match.round}`)
+  return InfoEmbed("Your match is ready!", `Match ID: ${match._id}`)
     .addField(
       isBlueTeam ? "You are the 🔹Blue Team🔹" : "You are the 🔸Orange Team🔸",
       isBlueTeam

@@ -19,6 +19,10 @@ export async function getAllMatches(): Promise<IQualification[]> {
   return convertAll(await Qualifications.find());
 }
 
-export async function addMatches(matches: IQualification[]): Promise<void> {
-  await Qualifications.insertMany(matches);
+export async function addMatches(matches: IQualification[]): Promise<IQualification[]> {
+  return convertAll(await Qualifications.insertMany(matches));
+}
+
+export async function updateMatchWithId(matchId: Types.ObjectId, updates: Partial<IQualification>): Promise<void> {
+  await Qualifications.findByIdAndUpdate(matchId, updates, { new: true });
 }
