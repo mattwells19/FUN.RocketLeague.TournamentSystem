@@ -2,6 +2,12 @@ import { MessageEmbed } from "discord.js";
 import Qualification, { IMatch, IQualification } from "../Schemas/Qualifications";
 import { ErrorEmbed, SuccessEmbed } from "./EmbedHelper";
 import Teams from "../Schemas/Teams";
+import { CommandFunctionType } from "./Commands";
+
+const confirmCommand: CommandFunctionType = async ({ authorId }) => {
+  return await confirmMatch(authorId);
+};
+export default confirmCommand;
 
 const determineWinningTeam = (match: IQualification): "blue" | "orange" => {
   let blueWins = 0,
@@ -13,7 +19,7 @@ const determineWinningTeam = (match: IQualification): "blue" | "orange" => {
   return blueWins > orangeWins ? "blue" : "orange";
 };
 
-export default async function confirmMatch(confirmerId: string): Promise<MessageEmbed> {
+async function confirmMatch(confirmerId: string): Promise<MessageEmbed> {
   const confirmerTeam = await Teams.getOne({ players: confirmerId });
 
   if (!confirmerTeam) throw Error("Confirmer's team not found");

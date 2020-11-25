@@ -1,10 +1,12 @@
 import { mocked } from "ts-jest/utils";
 import { generateMatchScores, QualBuilder, QualMatchBuilder, TeamBuilder } from "./Builders";
-import reportMatch from "../src/report";
+import reportCommand from "../src/report";
 import * as faker from "faker";
 import { IMatch, IQualification } from "../Schemas/Qualifications";
 import Teams from "../Schemas/Teams";
 import Qualifications from "../Schemas/Qualifications";
+import { MessageEmbed } from "discord.js";
+import { ICommandParameters } from "../src/Commands";
 
 jest.mock("../Schemas/Teams");
 jest.mock("../Schemas/Qualifications");
@@ -12,6 +14,18 @@ jest.mock("../Schemas/Qualifications");
 beforeEach(() => {
   jest.clearAllMocks();
 });
+
+async function runReportCommand(
+  reporterId: string = faker.random.uuid(),
+  higherScoreOverride?: number,
+  lowerScoreOverride?: number
+): Promise<MessageEmbed> {
+  const [higherScore, lowerScore] = generateMatchScores();
+  return await reportCommand({
+    authorId: reporterId,
+    args: [`${higherScoreOverride ?? higherScore}-${lowerScoreOverride ?? lowerScore}`],
+  } as ICommandParameters);
+}
 
 describe("report match tests", () => {
   it.each<keyof IQualification>(["blueTeam", "orangeTeam"])(
@@ -26,7 +40,7 @@ describe("report match tests", () => {
       const mockUpdateMatch = mocked(Qualifications.updateWithId);
       const [higherScore, lowerScore] = generateMatchScores();
 
-      const response = await reportMatch(mockReportingTeam.players[0], higherScore, lowerScore);
+      const response = await runReportCommand(mockReportingTeam.players[0], higherScore, lowerScore);
       expect(response).toHaveProperty("title", "Match Reported");
       expect(mockUpdateMatch).toHaveBeenCalledWith(
         expect.anything(),
@@ -45,7 +59,7 @@ describe("report match tests", () => {
 
   it("throws error when reporting team not found", async () => {
     mocked(Teams.getOne).mockResolvedValueOnce(null);
-    await expect(reportMatch(faker.random.uuid(), faker.random.number(10), faker.random.number(10))).rejects.toThrow();
+    await expect(runReportCommand()).rejects.toThrow();
   });
 
   it("gets the match with the latest round", async () => {
@@ -58,9 +72,8 @@ describe("report match tests", () => {
     mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
     mocked(Qualifications.get).mockResolvedValueOnce([mockQualRoundOne, mockQualRoundTwo]);
     const mockUpdateMatch = mocked(Qualifications.updateWithId);
-    const [higherScore, lowerScore] = generateMatchScores();
 
-    const response = await reportMatch(mockReportingTeam.players[0], higherScore, lowerScore);
+    const response = await runReportCommand(mockReportingTeam.players[0]);
     expect(response).toHaveProperty("title", "Match Reported");
     expect(mockUpdateMatch).toHaveBeenCalledWith(
       expect.anything(),
@@ -78,9 +91,8 @@ describe("report match tests", () => {
     mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
     mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
     const mockUpdateMatch = mocked(Qualifications.updateWithId);
-    const [higherScore, lowerScore] = generateMatchScores();
 
-    const response = await reportMatch(mockReportingTeam.players[0], higherScore, lowerScore);
+    const response = await runReportCommand(mockReportingTeam.players[0]);
     expect(response).toHaveProperty("title", "Previous Match Not Confirmed");
     expect(mockUpdateMatch).not.toHaveBeenCalled();
   });
@@ -122,7 +134,7 @@ describe("report match tests", () => {
       },
     ];
 
-    const response = await reportMatch(mockReportingTeam.players[0], higherScore, lowerScore);
+    const response = await runReportCommand(mockReportingTeam.players[0], higherScore, lowerScore);
     expect(response).toHaveProperty("title", "Match Reported");
     expect(mockUpdateMatch).toHaveBeenCalledWith(
       expect.anything(),
@@ -140,7 +152,7 @@ describe("report match tests", () => {
     mocked(Teams.getOne).mockResolvedValueOnce(mockReportingTeam);
     mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
 
-    const response = await reportMatch(mockReportingTeam.players[0], faker.random.number(10), faker.random.number(10));
+    const response = await runReportCommand(mockReportingTeam.players[0]);
     expect(response).toHaveProperty("title", "No Matches to Report");
   });
 });

@@ -1,6 +1,21 @@
 import { MessageEmbed } from "discord.js";
 import { ErrorEmbed, InfoEmbed, SuccessEmbed } from "./EmbedHelper";
 import Tournaments from "../Schemas/Tournaments";
+import { CommandFunctionType } from "./Commands";
+
+const tournamentCommand: CommandFunctionType = async ({ args }) => {
+  if (args.length === 0) {
+    return await listTournaments();
+  } else if (args.includes("delete")) {
+    const tournamentName = args.filter((value) => value !== "delete").join(" ");
+    return await deleteTournament(tournamentName);
+  } else {
+    const tournamentDate = args.pop() ?? "";
+    const tournamentName = args.join(" ").trim();
+    return await newTournament(tournamentName, tournamentDate);
+  }
+};
+export default tournamentCommand;
 
 const formateDateTime = (dateTime: string): Date | null => {
   // expected format: Month/Day/Year-Hour:Minute[pm/am]
@@ -18,7 +33,7 @@ const formateDateTime = (dateTime: string): Date | null => {
   }
 };
 
-export async function newTournament(name: string, date: string): Promise<MessageEmbed> {
+async function newTournament(name: string, date: string): Promise<MessageEmbed> {
   if (name === "") return ErrorEmbed("Tournament Not Created", "You must provide a name for your tournament.");
 
   if (await Tournaments.getOne({ name: new RegExp(`^${name}$`, "i") }))
@@ -51,7 +66,7 @@ export async function newTournament(name: string, date: string): Promise<Message
   }
 }
 
-export async function listTournaments(): Promise<MessageEmbed> {
+async function listTournaments(): Promise<MessageEmbed> {
   const tournaments = await Tournaments.get({ startDateTime: { $gt: new Date() } });
   const message = InfoEmbed("Tournaments", "");
   tournaments.forEach((tournament) => {
@@ -60,7 +75,7 @@ export async function listTournaments(): Promise<MessageEmbed> {
   return message;
 }
 
-export async function deleteTournament(name: string): Promise<MessageEmbed> {
+async function deleteTournament(name: string): Promise<MessageEmbed> {
   const removedTournament = await Tournaments.remove({ name });
   if (removedTournament) return SuccessEmbed(`Removed ${name}`, "Successfully removed tournament.");
   else

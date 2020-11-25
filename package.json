@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon ./bot/src/index.ts",
     "start": "node ./dist/index.js",
-    "lint": "npx eslint --ext .ts",
+    "lint": "npx eslint bot/**/*.ts",
     "test": "jest",
     "build": "npx tsc"
   },

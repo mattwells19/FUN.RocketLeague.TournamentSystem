@@ -1,14 +1,20 @@
 import { mocked } from "ts-jest/utils";
 import Tournaments from "../Schemas/Tournaments";
-import { deleteTournament, listTournaments, newTournament } from "../src/tournament";
+import tournamentCommand from "../src/tournament";
 import * as faker from "faker";
 import { TournamentBuilder } from "./Builders";
+import { MessageEmbed } from "discord.js";
+import { ICommandParameters } from "../src/Commands";
 
 jest.mock("../Schemas/Tournaments");
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
+
+async function runTournamentCommand(args: string[]): Promise<MessageEmbed> {
+  return await tournamentCommand({ args } as ICommandParameters);
+}
 
 const generateFakeDateString = () => {
   const date = `${faker.random.number({ max: 12, min: 1 })}/${faker.random.number({
@@ -24,7 +30,7 @@ const generateFakeDateString = () => {
 
 describe("tournament tests", () => {
   it("returns error message with no team name", async () => {
-    const reponse = await newTournament("", generateFakeDateString());
+    const reponse = await runTournamentCommand(["", generateFakeDateString()]);
     expect(reponse).toHaveProperty("title", "Tournament Not Created");
     expect(reponse).toHaveProperty("description", "You must provide a name for your tournament.");
   });
@@ -32,7 +38,7 @@ describe("tournament tests", () => {
   it("returns error message dupe team name", async () => {
     mocked(Tournaments.getOne).mockResolvedValueOnce(TournamentBuilder.single());
     const mockName = faker.random.words();
-    const reponse = await newTournament(mockName, generateFakeDateString());
+    const reponse = await runTournamentCommand([mockName, generateFakeDateString()]);
     expect(reponse).toHaveProperty("title", "Tournament Not Created");
     expect(reponse).toHaveProperty(
       "description",
@@ -42,7 +48,7 @@ describe("tournament tests", () => {
 
   it("returns error message on invalid date string", async () => {
     mocked(Tournaments.getOne).mockResolvedValueOnce(null);
-    const reponse = await newTournament(faker.random.words(), faker.lorem.word());
+    const reponse = await runTournamentCommand([...faker.random.words().split(" "), faker.lorem.word()]);
     expect(reponse).toHaveProperty("title", "Invalid Date Format");
   });
 
@@ -53,7 +59,7 @@ describe("tournament tests", () => {
     mocked(Tournaments.getOne).mockResolvedValueOnce(null);
     const mockAddTournament = mocked(Tournaments.insert).mockResolvedValue(null);
     const mockName = faker.random.words();
-    const reponse = await newTournament(mockName, dateString);
+    const reponse = await runTournamentCommand([...mockName.split(" "), dateString]);
     expect(reponse).toHaveProperty("title", `${mockName} Created`);
     expect(reponse).toHaveProperty(
       "description",
@@ -65,7 +71,7 @@ describe("tournament tests", () => {
   it("lists all tournaments", async () => {
     const mockTournaments = TournamentBuilder.many(3);
     mocked(Tournaments.get).mockResolvedValueOnce(mockTournaments);
-    const response = await listTournaments();
+    const response = await runTournamentCommand([]);
     expect(response.fields).toHaveLength(3);
     response.fields.forEach((field, index) => {
       expect(field).toHaveProperty("name", mockTournaments[index].name);
@@ -76,7 +82,7 @@ describe("tournament tests", () => {
   it("returns success message when deleted tournament successfully", async () => {
     const mockDeleteTournament = mocked(Tournaments.remove).mockResolvedValueOnce(TournamentBuilder.single());
     const mockTournamentName = faker.random.words();
-    const response = await deleteTournament(mockTournamentName);
+    const response = await runTournamentCommand(["delete", mockTournamentName]);
     expect(response).toHaveProperty("title", `Removed ${mockTournamentName}`);
     expect(response).toHaveProperty("description", "Successfully removed tournament.");
     expect(mockDeleteTournament).toHaveBeenLastCalledWith(expect.objectContaining({ name: mockTournamentName }));
@@ -85,7 +91,7 @@ describe("tournament tests", () => {
   it("returns error message when deleted tournament fails", async () => {
     mocked(Tournaments.remove).mockResolvedValueOnce(null);
     const mockTournamentName = faker.random.words();
-    const response = await deleteTournament(mockTournamentName);
+    const response = await runTournamentCommand(["delete", mockTournamentName]);
     expect(response).toHaveProperty("title", "Tournament Not Found");
     expect(response).toHaveProperty(
       "description",

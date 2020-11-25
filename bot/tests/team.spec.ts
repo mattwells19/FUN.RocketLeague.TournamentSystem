@@ -1,9 +1,10 @@
-import { newTeam } from "../src/team";
+import teamCommand from "../src/team";
 import * as faker from "faker";
 import { MessageEmbed } from "discord.js";
 import { TeamBuilder } from "./Builders";
 import Teams from "../Schemas/Teams";
 import { mocked } from "ts-jest/utils";
+import { ICommandParameters } from "../src/Commands";
 
 jest.mock("../Schemas/Teams");
 
@@ -11,12 +12,19 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+async function runTeamCommand(teamName: string, playerIds: string[]) {
+  const authorId = playerIds.splice(0, 1)[0];
+  const args = teamName.split(" ");
+  const mentionsIds = [...playerIds];
+  return await teamCommand({ authorId, args, mentionsIds } as ICommandParameters);
+}
+
 describe("team tests", () => {
   it("creates a new team correctly", async () => {
     mocked(Teams.getOne).mockResolvedValueOnce(null);
     const insertMock = mocked(Teams.insert).mockResolvedValueOnce(null);
     const mockTeamName = faker.lorem.word();
-    const response: MessageEmbed = await newTeam(mockTeamName, [
+    const response: MessageEmbed = await runTeamCommand(mockTeamName, [
       faker.random.uuid(),
       faker.random.uuid(),
       faker.random.uuid(),
@@ -30,13 +38,13 @@ describe("team tests", () => {
     const mockDoc = TeamBuilder.single();
     // Returning anything results in the "Player already registered error"
     mocked(Teams.getOne).mockResolvedValue(mockDoc);
-    const response: MessageEmbed = await newTeam(faker.lorem.word(), mockDoc.players);
+    const response: MessageEmbed = await runTeamCommand(faker.lorem.word(), mockDoc.players);
     expect(response).toHaveProperty("title", "Player Already Registered");
   });
 
   // these tests check the validation logic built into the model which isn't defined when Teams is mocked
   it("catches a team without a name", async () => {
-    const response: MessageEmbed = await newTeam("", TeamBuilder.single().players);
+    const response: MessageEmbed = await runTeamCommand("", TeamBuilder.single().players);
     expect(response).toHaveProperty("title", "Error Registering Team");
     expect(response).toHaveProperty("description", "You must provide a team name to register.");
   });
@@ -45,7 +53,7 @@ describe("team tests", () => {
     mocked(Teams.getOne).mockResolvedValue(null);
     const teamIds = [];
     for (let i = 0; i < numOfPlayers; i++) teamIds.push(faker.random.uuid());
-    const response: MessageEmbed = await newTeam(faker.lorem.word(), teamIds);
+    const response: MessageEmbed = await runTeamCommand(faker.lorem.word(), teamIds);
     expect(response).toHaveProperty("title", "Error Registering Team");
     expect(response).toHaveProperty("description", `You need 3 players to make a team. Found ${numOfPlayers}`);
   });
@@ -57,7 +65,7 @@ describe("team tests", () => {
     mocked(Teams.getOne).mockResolvedValueOnce(null);
     mocked(Teams.getOne).mockResolvedValueOnce(null);
     mocked(Teams.getOne).mockResolvedValueOnce(mockTeams[1]);
-    const response: MessageEmbed = await newTeam(mockTeamName, mockTeams[1].players);
+    const response: MessageEmbed = await runTeamCommand(mockTeamName, mockTeams[1].players);
     expect(response).toHaveProperty("title", "Team Name Taken");
   });
 });

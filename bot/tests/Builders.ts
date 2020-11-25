@@ -92,10 +92,10 @@ const generateMatchScores = (max = 10): [number, number] => {
 class BuildBestOfs {
   single(overrides?: Partial<IBestOfs>): IBestOfs {
     return {
-      quals: faker.random.number(10),
-      quarters: faker.random.number(10),
-      semis: faker.random.number(10),
-      finals: faker.random.number(10),
+      quals: overrides?.quals ?? faker.random.number(10),
+      quarters: overrides?.quarters ?? faker.random.number(10),
+      semis: overrides?.semis ?? faker.random.number(10),
+      finals: overrides?.finals ?? faker.random.number(10),
     } as IBestOfs;
   }
 

@@ -14,8 +14,7 @@ async function fetchGuild() {
   return await client.guilds.fetch(process.env.GUILD_ID ?? "");
 }
 
-export default async function createTeamChannels(): Promise<void> {
-  const teams = await Teams.get({});
+export async function createTeamChannels(teams: ITeam[]): Promise<void> {
   const Guild = await fetchGuild();
 
   for (const team of teams) {

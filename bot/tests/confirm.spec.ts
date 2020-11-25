@@ -2,9 +2,10 @@ import { mocked } from "ts-jest/utils";
 import Teams from "../Schemas/Teams";
 import Qualifications from "../Schemas/Qualifications";
 import { generateMatchScores, QualBuilder, QualMatchBuilder, TeamBuilder } from "./Builders";
-import reportMatch from "../src/report";
 import * as faker from "faker";
-import confirmMatch from "../src/confirm";
+import confirmCommand from "../src/confirm";
+import { MessageEmbed } from "discord.js";
+import { ICommandParameters } from "../src/Commands";
 
 jest.mock("../Schemas/Teams");
 jest.mock("../Schemas/Qualifications");
@@ -13,10 +14,14 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+async function runConfirmCommand(mockAuthorId: string = faker.random.uuid()): Promise<MessageEmbed> {
+  return confirmCommand({ authorId: mockAuthorId } as ICommandParameters);
+}
+
 describe("confirm match tests", () => {
   it("throws error when confirming team not found", async () => {
     mocked(Teams.getOne).mockResolvedValueOnce(null);
-    await expect(reportMatch(faker.random.uuid(), faker.random.number(10), faker.random.number(10))).rejects.toThrow();
+    await expect(runConfirmCommand()).rejects.toThrow();
   });
 
   it.each([true, false])("returns error message when there is no match to confirm", async (confirmed) => {
@@ -26,7 +31,7 @@ describe("confirm match tests", () => {
 
     mocked(Teams.getOne).mockResolvedValueOnce(mockConfirmingTeam);
     mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
-    const response = await confirmMatch(mockConfirmingTeam.players[0]);
+    const response = await runConfirmCommand(mockConfirmingTeam.players[0]);
     expect(response).toHaveProperty("title", "No Matches Reported");
   });
 
@@ -37,7 +42,7 @@ describe("confirm match tests", () => {
 
     mocked(Teams.getOne).mockResolvedValueOnce(mockConfirmingTeam);
     mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
-    const response = await confirmMatch(mockConfirmingTeam.players[0]);
+    const response = await runConfirmCommand(mockConfirmingTeam.players[0]);
     expect(response).toHaveProperty("title", "Cannot Confirm Match");
   });
 
@@ -67,7 +72,7 @@ describe("confirm match tests", () => {
     mocked(Qualifications.get).mockResolvedValueOnce([mockQual]);
     const mockUpdateMatch = mocked(Qualifications.updateWithId);
     // const mockFindAndUpdateTeamWithId = mocked(Teams.findAndUpdateTeamWithId);
-    const response = await confirmMatch(mockConfirmingTeam.players[0]);
+    const response = await runConfirmCommand(mockConfirmingTeam.players[0]);
     expect(response).toHaveProperty("title", "Match Confirmed");
     expect(mockUpdateMatch).toHaveBeenCalledWith(
       expect.anything(),

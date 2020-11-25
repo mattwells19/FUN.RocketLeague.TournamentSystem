@@ -1,13 +1,16 @@
 import { MessageEmbed } from "discord.js";
 import Qualification, { IQualification } from "../Schemas/Qualifications";
 import Teams from "../Schemas/Teams";
+import { CommandFunctionType } from "./Commands";
 import { ErrorEmbed, SuccessEmbed } from "./EmbedHelper";
 
-export default async function reportMatch(
-  reporterId: string,
-  winnerScore: number,
-  loserScore: number
-): Promise<MessageEmbed> {
+const reportCommand: CommandFunctionType = async ({ authorId, args }) => {
+  const [winningTeamScore, losingTeamScore] = args[0].split("-");
+  return await reportMatch(authorId, parseInt(winningTeamScore), parseInt(losingTeamScore));
+};
+export default reportCommand;
+
+async function reportMatch(reporterId: string, winnerScore: number, loserScore: number): Promise<MessageEmbed> {
   const reporterTeam = await Teams.getOne({ players: reporterId });
 
   if (!reporterTeam) throw Error("Reporter's team not found");

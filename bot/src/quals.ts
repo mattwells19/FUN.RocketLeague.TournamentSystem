@@ -4,8 +4,14 @@ import generateMatchups from "./Swiss";
 import { sendMatchDetails } from "./ChannelHelper";
 import Qualification, { IQualification } from "../Schemas/Qualifications";
 import Teams from "../Schemas/Teams";
+import { CommandFunctionType } from "./Commands";
 
-export async function startRound(): Promise<MessageEmbed> {
+const startCommand: CommandFunctionType = async () => {
+  return await startRound();
+};
+export default startCommand;
+
+async function startRound(): Promise<MessageEmbed> {
   const teams = await Teams.get({ seed: -1 });
   if (teams.length > 0) {
     return ErrorEmbed(
