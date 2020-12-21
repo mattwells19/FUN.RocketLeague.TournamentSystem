@@ -60,7 +60,7 @@ export async function createTeamChannels(teams: ITeam[]): Promise<void> {
   }
 }
 
-export async function sendMatchDetails(matches: IQualification[]): Promise<void> {
+export async function sendMatchDetails(matches: IQualification[], roundBestOf: number): Promise<void> {
   for (const match of matches) {
     const blueTeamPromise = Teams.getWithId(match.blueTeam);
     const orangeTeamPromise = Teams.getWithId(match.orangeTeam);
@@ -71,7 +71,7 @@ export async function sendMatchDetails(matches: IQualification[]): Promise<void>
     const matchDetails = (team: ITeam, opponent: ITeam, lobbyInfo: ILobbyInfo): Promise<Message> => {
       return client.channels.fetch(team.channelId).then((channel) => {
         const teamChannel = channel as TextChannel;
-        return teamChannel.send(MatchReadyEmbed(opponent, match, lobbyInfo));
+        return teamChannel.send(MatchReadyEmbed(opponent, match, lobbyInfo, roundBestOf));
       });
     };
 
@@ -89,7 +89,12 @@ const generateLobbyInfo = (): ILobbyInfo => {
   return { username: uniqueNamesGenerator(customConfig), password: uniqueNamesGenerator(customConfig) };
 };
 
-const MatchReadyEmbed = (opponent: ITeam, match: IQualification, lobbyInfo: ILobbyInfo): MessageEmbed => {
+const MatchReadyEmbed = (
+  opponent: ITeam,
+  match: IQualification,
+  lobbyInfo: ILobbyInfo,
+  roundBestOf: number
+): MessageEmbed => {
   const isBlueTeam = opponent._id.equals(match.orangeTeam);
 
   return InfoEmbed("Your match is ready!", `Match ID: ${match._id}`)
@@ -98,6 +103,10 @@ const MatchReadyEmbed = (opponent: ITeam, match: IQualification, lobbyInfo: ILob
       isBlueTeam
         ? "Please create the private match using the lobby info outlined below."
         : "Please join the lobby using the info outlined below."
+    )
+    .addField(
+      `This round is a best of ${roundBestOf}`,
+      `First team to win ${Math.ceil(roundBestOf / 2)} match(es) wins the series.`
     )
     .addField("Lobby Info", `__Username:__ ${lobbyInfo.username}\n__Password:__ ${lobbyInfo.password}`, false)
     .addField(

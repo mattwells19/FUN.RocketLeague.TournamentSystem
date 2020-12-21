@@ -12,6 +12,7 @@ export interface ITournament {
   _id: Types.ObjectId;
   name: string;
   bestOfs: IBestOfs;
+  numOfQualRounds: number;
   registration_open: boolean;
   startDateTime: Date;
 }
@@ -48,6 +49,10 @@ const TournamentSchema = new Schema(
     startDateTime: {
       type: Date,
       required: true,
+    },
+    numOfQualRounds: {
+      type: Number,
+      default: -1,
     },
     bestOfs: BestOfsSchema,
   },

@@ -16,7 +16,7 @@ export const registerCommands = (): void => {
   BotCommands.registerCommand("report", reportCommand);
   BotCommands.registerCommand("start", startCommand);
   BotCommands.registerCommand("confirm", confirmCommand);
-  BotCommands.registerCommand("tournament", tournamentCommand, true);
+  BotCommands.registerCommand("new", tournamentCommand, true);
 };
 
 export default async function processCommand(msg: Message): Promise<MessageEmbed> {

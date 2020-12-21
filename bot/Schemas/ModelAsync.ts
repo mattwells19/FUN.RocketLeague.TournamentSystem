@@ -12,7 +12,7 @@ export class ModelAsync<T> {
   private convertAll = (docs: Document[]): Array<T> =>
     docs.map((doc) => this.convert(doc)).filter((value): value is T => value !== null);
 
-  private convert = (doc: Document | null): T | null => doc?.toJSON() ?? null;
+  private convert = (doc: Document | null): T | null => (doc?.toJSON() as T) ?? null;
 
   public async get(options: QueryOptions): Promise<T[]> {
     return this.convertAll(await this.model.find(options));
@@ -45,8 +45,8 @@ export class ModelAsync<T> {
   public async update(
     options: QueryOptions,
     updates: Partial<T> | MongooseUpdateQuery<Pick<Document, "_id">>
-  ): Promise<T[]> {
-    return this.convertAll(await this.model.updateMany(options, updates));
+  ): Promise<void> {
+    await this.model.updateMany(options, updates);
   }
 
   public async updateOne(
